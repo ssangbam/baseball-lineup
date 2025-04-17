@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>야구 라인업 및 포지션 시각화</title>
+    <title>야구 라인업 저장/불러오기</title>
     <style>
         body { font-family: 'Noto Sans KR', sans-serif; margin: 40px; display: flex; justify-content: space-between; }
         h2, h3 { color: #2c3e50; }
@@ -12,9 +12,8 @@
         th { background: #e2e2e2; }
         input, select, button { padding: 3px; font-size: 13px; }
         .small-input { width: 50px; }
-        .side-select { width: 40px; }
         .mid-relief, .bench-player { margin-top: 3px; }
-        .field-container { width: 500px; height: 500px; text-align: center; position: relative; }
+        .field-container { width: 500px; text-align: center; position: relative; }
         .field-container img { width: 500px; height: 500px; display: block; }
         .position-label {
             position: absolute;
@@ -39,6 +38,30 @@
         .pos-투수      { left: 250px; top: 330px; background: #fffbe0; border: 2px solid #ffd600; }
         .starter-today { background: #fffbe0 !important; border: 2px solid #ffd600 !important; }
         .starter-btn { cursor:pointer; }
+        .lineup-save-bar-underfield {
+            margin-top: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .lineup-save-bar {
+            background: rgba(255,255,255,0.95);
+            border-radius: 10px;
+            padding: 10px 12px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.07);
+            margin-bottom: 6px;
+            display: flex;
+            gap: 5px;
+            align-items: center;
+        }
+        .lineup-list {
+            background: rgba(255,255,255,0.9);
+            border-radius: 8px;
+            padding: 4px 8px;
+            margin-bottom: 2px;
+            font-size: 13px;
+        }
+        .lineup-list button { margin-left: 5px; }
     </style>
 </head>
 <body>
@@ -54,6 +77,14 @@
         <div class="position-label pos-우익수" id="label-우익수"></div>
         <div class="position-label pos-지명타자" id="label-지명타자"></div>
         <div class="position-label pos-투수" id="label-투수"></div>
+        <!-- 이미지 하단 라인업 저장/불러오기 UI -->
+        <div class="lineup-save-bar-underfield">
+            <div class="lineup-save-bar">
+                <input type="text" id="lineupName" placeholder="라인업 이름" style="width:140px;">
+                <button type="button" onclick="saveLineup()">라인업 저장</button>
+            </div>
+            <div class="lineup-list" id="lineupList"></div>
+        </div>
     </div>
     <div class="table-container">
         <h2>야구 라인업 짜기</h2>
@@ -64,7 +95,7 @@
                 <thead>
                     <tr>
                         <th>타순</th>
-                        <th>선수 이름 / 좌우 / 포지션</th>
+                        <th>선수 이름 / 포지션</th>
                     </tr>
                 </thead>
                 <tbody id="battersTableBody">
@@ -91,69 +122,29 @@
                 <thead>
                     <tr>
                         <th>구분</th>
-                        <th>선수 이름 / 좌우<br><span style="font-weight:normal;font-size:12px;">(누르면 오늘 선발)</span></th>
+                        <th>선수 이름</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
                         <td>1선발</td>
-                        <td>
-                            <input type="text" id="starter1" placeholder="선수 이름" class="small-input">
-                            <select id="starter1-side" class="side-select">
-                                <option value="">좌/우</option>
-                                <option value="좌">좌</option>
-                                <option value="우">우</option>
-                            </select>
-                            <button type="button" class="starter-btn" onclick="setTodayStarter(1)">오늘 선발</button>
-                        </td>
+                        <td><input type="text" id="starter1" placeholder="선수 이름" class="small-input"></td>
                     </tr>
                     <tr>
                         <td>2선발</td>
-                        <td>
-                            <input type="text" id="starter2" placeholder="선수 이름" class="small-input">
-                            <select id="starter2-side" class="side-select">
-                                <option value="">좌/우</option>
-                                <option value="좌">좌</option>
-                                <option value="우">우</option>
-                            </select>
-                            <button type="button" class="starter-btn" onclick="setTodayStarter(2)">오늘 선발</button>
-                        </td>
+                        <td><input type="text" id="starter2" placeholder="선수 이름" class="small-input"></td>
                     </tr>
                     <tr>
                         <td>3선발</td>
-                        <td>
-                            <input type="text" id="starter3" placeholder="선수 이름" class="small-input">
-                            <select id="starter3-side" class="side-select">
-                                <option value="">좌/우</option>
-                                <option value="좌">좌</option>
-                                <option value="우">우</option>
-                            </select>
-                            <button type="button" class="starter-btn" onclick="setTodayStarter(3)">오늘 선발</button>
-                        </td>
+                        <td><input type="text" id="starter3" placeholder="선수 이름" class="small-input"></td>
                     </tr>
                     <tr>
                         <td>4선발</td>
-                        <td>
-                            <input type="text" id="starter4" placeholder="선수 이름" class="small-input">
-                            <select id="starter4-side" class="side-select">
-                                <option value="">좌/우</option>
-                                <option value="좌">좌</option>
-                                <option value="우">우</option>
-                            </select>
-                            <button type="button" class="starter-btn" onclick="setTodayStarter(4)">오늘 선발</button>
-                        </td>
+                        <td><input type="text" id="starter4" placeholder="선수 이름" class="small-input"></td>
                     </tr>
                     <tr>
                         <td>5선발</td>
-                        <td>
-                            <input type="text" id="starter5" placeholder="선수 이름" class="small-input">
-                            <select id="starter5-side" class="side-select">
-                                <option value="">좌/우</option>
-                                <option value="좌">좌</option>
-                                <option value="우">우</option>
-                            </select>
-                            <button type="button" class="starter-btn" onclick="setTodayStarter(5)">오늘 선발</button>
-                        </td>
+                        <td><input type="text" id="starter5" placeholder="선수 이름" class="small-input"></td>
                     </tr>
                     <tr>
                         <td style="vertical-align:top; background:#f6f6f6;">
@@ -166,21 +157,14 @@
                     </tr>
                     <tr>
                         <td>마무리투수</td>
-                        <td>
-                            <input type="text" id="closer" placeholder="선수 이름" class="small-input">
-                            <select id="closer-side" class="side-select">
-                                <option value="">좌/우</option>
-                                <option value="좌">좌</option>
-                                <option value="우">우</option>
-                            </select>
-                        </td>
+                        <td><input type="text" id="closer" placeholder="선수 이름" class="small-input"></td>
                     </tr>
                 </tbody>
             </table>
         </form>
     </div>
     <script>
-        // 타자 포지션 배열
+        // 포지션 배열
         const positions = [
             "포수", "1루수", "2루수", "3루수", "유격수",
             "좌익수", "중견수", "우익수", "지명타자"
@@ -194,11 +178,6 @@
                     <td>${i}번</td>
                     <td>
                         <input type="text" name="batter${i}" placeholder="선수 이름" class="small-input" oninput="updateFieldLabels()">
-                        <select name="side${i}" class="side-select" onchange="updateFieldLabels()">
-                            <option value="">좌/우</option>
-                            <option value="좌">좌</option>
-                            <option value="우">우</option>
-                        </select>
                         <select name="position${i}" onchange="updateFieldLabels()">
                             <option value="">포지션 선택</option>
                             ${positions.map(pos => `<option>${pos}</option>`).join('')}
@@ -240,14 +219,6 @@
             input.placeholder = '선수 이름';
             input.className = 'mid-relief small-input';
 
-            const sideSel = document.createElement('select');
-            sideSel.className = 'side-select';
-            sideSel.innerHTML = `
-                <option value="">좌/우</option>
-                <option value="좌">좌</option>
-                <option value="우">우</option>
-            `;
-
             const delBtn = document.createElement('button');
             delBtn.innerText = '삭제';
             delBtn.type = 'button';
@@ -258,46 +229,11 @@
 
             const div = document.createElement('div');
             div.appendChild(input);
-            div.appendChild(sideSel);
             div.appendChild(delBtn);
             container.appendChild(div);
         }
 
-        // 오늘 선발투수 관련 변수
-        let todayStarterNum = null; // 1~5
-
-        // 오늘 선발투수 지정 함수
-        function setTodayStarter(num) {
-            todayStarterNum = num;
-            updateStarterHighlight();
-            updatePitcherOnField();
-        }
-
-        // 선발 버튼 강조
-        function updateStarterHighlight() {
-            for(let i=1; i<=5; i++) {
-                const input = document.getElementById('starter'+i);
-                if(i === todayStarterNum) {
-                    input.classList.add('starter-today');
-                } else {
-                    input.classList.remove('starter-today');
-                }
-            }
-        }
-
-        // 야구장 투수 위치에 오늘 선발 이름만 표시 (좌/우 표시 X)
-        function updatePitcherOnField() {
-            let name = '';
-            if(todayStarterNum) {
-                const input = document.getElementById('starter'+todayStarterNum);
-                if(input.value) {
-                    name = input.value;
-                }
-            }
-            document.getElementById('label-투수').innerText = name;
-        }
-
-        // 타자 포지션별로 입력된 선수 이름을 야구장에 표시 (좌/우 없이)
+        // 포지션별로 입력된 선수 이름을 야구장에 표시
         function updateFieldLabels() {
             positions.forEach(pos => {
                 document.getElementById('label-' + pos).innerText = '';
@@ -309,25 +245,152 @@
                     document.getElementById('label-' + pos).innerText = name;
                 }
             }
-            // 투수 이름도 갱신
-            updatePitcherOnField();
         }
 
-        // 투수 입력이 바뀔 때도 야구장에 갱신
-        function addStarterInputListeners() {
-            for(let i=1; i<=5; i++) {
-                document.getElementById('starter'+i).addEventListener('input', function() {
-                    if(todayStarterNum === i) updatePitcherOnField();
-                });
-                document.getElementById('starter'+i+'-side').addEventListener('change', function() {
-                    if(todayStarterNum === i) updatePitcherOnField();
+        // ---- 라인업 저장/불러오기 ----
+        function getAllLineups() {
+            return JSON.parse(localStorage.getItem('lineups') || '[]');
+        }
+        function saveAllLineups(arr) {
+            localStorage.setItem('lineups', JSON.stringify(arr));
+        }
+        function saveLineup() {
+            const name = document.getElementById('lineupName').value.trim();
+            if(!name) {
+                alert('라인업 이름을 입력하세요!');
+                return;
+            }
+            const lineup = {
+                name,
+                batters: [],
+                bench: [],
+                starters: [],
+                midRelief: [],
+                closer: document.getElementById('closer').value,
+            };
+            // 타자
+            for(let i=1; i<=9; i++) {
+                lineup.batters.push({
+                    name: document.querySelector(`input[name="batter${i}"]`).value,
+                    pos: document.querySelector(`select[name="position${i}"]`).value,
                 });
             }
+            // 벤치
+            document.querySelectorAll('#benchPlayersBody input').forEach(input => {
+                lineup.bench.push(input.value);
+            });
+            // 선발
+            for(let i=1; i<=5; i++) {
+                lineup.starters.push(document.getElementById('starter'+i).value);
+            }
+            // 중간계투
+            document.querySelectorAll('#midReliefContainer > div').forEach(div => {
+                const input = div.querySelector('input');
+                lineup.midRelief.push(input.value);
+            });
+
+            // 저장
+            let arr = getAllLineups();
+            // 같은 이름 있으면 덮어쓰기
+            const idx = arr.findIndex(l => l.name === name);
+            if(idx >= 0) arr[idx] = lineup;
+            else arr.push(lineup);
+            saveAllLineups(arr);
+            alert('라인업이 저장되었습니다!');
+            renderLineupList();
+        }
+        function renderLineupList() {
+            const arr = getAllLineups();
+            const div = document.getElementById('lineupList');
+            div.innerHTML = '';
+            arr.forEach((l, idx) => {
+                const span = document.createElement('span');
+                span.textContent = l.name;
+                const loadBtn = document.createElement('button');
+                loadBtn.textContent = '불러오기';
+                loadBtn.onclick = () => loadLineup(l.name);
+                const delBtn = document.createElement('button');
+                delBtn.textContent = '삭제';
+                delBtn.onclick = () => {
+                    if(confirm('정말 삭제할까요?')) {
+                        let arr = getAllLineups();
+                        arr = arr.filter(x => x.name !== l.name);
+                        saveAllLineups(arr);
+                        renderLineupList();
+                    }
+                };
+                div.appendChild(span);
+                div.appendChild(loadBtn);
+                div.appendChild(delBtn);
+                div.appendChild(document.createElement('br'));
+            });
+        }
+        function loadLineup(name) {
+            const arr = getAllLineups();
+            const l = arr.find(x => x.name === name);
+            if(!l) return;
+            // 타자
+            for(let i=1; i<=9; i++) {
+                document.querySelector(`input[name="batter${i}"]`).value = l.batters[i-1].name;
+                document.querySelector(`select[name="position${i}"]`).value = l.batters[i-1].pos;
+            }
+            // 벤치
+            const benchBody = document.getElementById('benchPlayersBody');
+            benchBody.innerHTML = '';
+            l.bench.forEach(name => {
+                const tr = document.createElement('tr');
+                const tdName = document.createElement('td');
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.value = name;
+                input.className = 'bench-player small-input';
+                tdName.appendChild(input);
+
+                const delBtn = document.createElement('button');
+                delBtn.type = 'button';
+                delBtn.innerText = '삭제';
+                delBtn.onclick = function() {
+                    benchBody.removeChild(tr);
+                };
+                tdName.appendChild(delBtn);
+
+                tr.appendChild(tdName);
+                benchBody.appendChild(tr);
+            });
+            // 선발
+            for(let i=1; i<=5; i++) {
+                document.getElementById('starter'+i).value = l.starters[i-1];
+            }
+            // 중간계투
+            const midReliefContainer = document.getElementById('midReliefContainer');
+            midReliefContainer.innerHTML = '';
+            l.midRelief.forEach(x => {
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.value = x;
+                input.className = 'mid-relief small-input';
+
+                const delBtn = document.createElement('button');
+                delBtn.innerText = '삭제';
+                delBtn.type = 'button';
+                delBtn.style.marginLeft = '4px';
+                delBtn.onclick = function() {
+                    midReliefContainer.removeChild(div);
+                };
+
+                const div = document.createElement('div');
+                div.appendChild(input);
+                div.appendChild(delBtn);
+                midReliefContainer.appendChild(div);
+            });
+            // 마무리
+            document.getElementById('closer').value = l.closer;
+            updateFieldLabels();
         }
 
         window.onload = function() {
             createBattersTable();
-            addStarterInputListeners();
+            renderLineupList();
         }
     </script>
 </body>
